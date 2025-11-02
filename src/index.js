@@ -20,8 +20,7 @@ const PORT = process.env.PORT || 3000;
 
 // Middleware CORS
 app.use(cors({
-  origin: 'http://localhost:5173', // Puerto por defecto de Vite
-  credentials: true
+  origin: '*', // Permitir todas las origin
 }));
 
 // Middleware para parsear JSON
@@ -46,13 +45,13 @@ app.get('/', (req, res) => {
 });
 
 // Registrar rutas
-app.use('/api/products', productController);
-app.use('/api/sales', saleController);
-app.use('/api/item-tickets', itemTicketController);
-app.use('/api/suppliers', supplierController);
-app.use('/api/business-movements', businessMovementController);
-app.use('/api/supplier-product-prices', supplierProductPriceController);
-app.use('/api/business-states', businessStateController);
+app.use('//api/products', productController);
+app.use('//api/sales', saleController);
+app.use('//api/item-tickets', itemTicketController);
+app.use('//api/suppliers', supplierController);
+app.use('//api/business-movements', businessMovementController);
+app.use('//api/supplier-product-prices', supplierProductPriceController);
+app.use('//api/business-states', businessStateController);
 
 // Inicializar servidor
 const startServer = async () => {
