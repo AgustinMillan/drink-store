@@ -1,12 +1,12 @@
-import { Sequelize, Op } from 'sequelize';
-import { Product, Supplier, SupplierProductPrice } from '../models/index.js';
+import { Sequelize, Op } from "sequelize";
+import { Product, Supplier, SupplierProductPrice } from "../models/index.js";
 
 class ProductService {
   // Obtener todos los productos
   async getAll() {
     try {
       const products = await Product.findAll({
-        order: [['Id', 'DESC']]
+        order: [["Id", "DESC"]],
       });
       return { success: true, data: products };
     } catch (error) {
@@ -19,7 +19,7 @@ class ProductService {
     try {
       const product = await Product.findByPk(id);
       if (!product) {
-        return { success: false, error: 'Producto no encontrado', status: 404 };
+        return { success: false, error: "Producto no encontrado", status: 404 };
       }
       return { success: true, data: product };
     } catch (error) {
@@ -42,7 +42,7 @@ class ProductService {
     try {
       const product = await Product.findByPk(id);
       if (!product) {
-        return { success: false, error: 'Producto no encontrado', status: 404 };
+        return { success: false, error: "Producto no encontrado", status: 404 };
       }
       await product.update(productData);
       return { success: true, data: product };
@@ -58,28 +58,45 @@ class ProductService {
         include: [
           {
             model: SupplierProductPrice,
-            as: 'supplierPrices',
-            include: {model: Supplier, as: 'supplier', attributes: ['Id', 'Name']},
+            as: "supplierPrices",
+            include: {
+              model: Supplier,
+              as: "supplier",
+              attributes: ["Id", "Name"],
+            },
             where: {
               UnitPrice: {
                 [Sequelize.Op.eq]: Sequelize.literal(`(
                   SELECT MIN("UnitPrice")
                   FROM "SupplierProductPrice" spp
                   WHERE spp."ProductId" = "Product"."Id"
-                )`)
-              }
+                )`),
+              },
             },
-            required: false
-          }
-        ]
+            required: false,
+          },
+        ],
       });
 
-      return { success: true, data: products.map(product => ({
-        Id: product.Id,
-        Name: product.Name,
-        AmountSupplier: product.supplierPrices[0].UnitPrice,
-        NameSupplier: product.supplierPrices[0].supplier.Name
-      })) };
+      return {
+        success: true,
+        data: products.map((product) => {
+          if (product.supplierPrices.length > 0) {
+            return {
+              Id: product.Id,
+              Name: product.Name,
+              AmountSupplier: product.supplierPrices[0].UnitPrice,
+              NameSupplier: product.supplierPrices[0].supplier.Name,
+            };
+          }
+          return {
+            Id: product.Id,
+            Name: product.Name,
+            AmountSupplier: null,
+            NameSupplier: null,
+          };
+        }),
+      };
     } catch (error) {
       return { success: false, error: error.message, status: 500 };
     }
@@ -90,10 +107,10 @@ class ProductService {
     try {
       const product = await Product.findByPk(id);
       if (!product) {
-        return { success: false, error: 'Producto no encontrado', status: 404 };
+        return { success: false, error: "Producto no encontrado", status: 404 };
       }
       await product.destroy();
-      return { success: true, message: 'Producto eliminado exitosamente' };
+      return { success: true, message: "Producto eliminado exitosamente" };
     } catch (error) {
       return { success: false, error: error.message, status: 500 };
     }
@@ -105,17 +122,20 @@ class ProductService {
       const products = await Product.findAll({
         where: {
           Stock: {
-            [Op.lt]: threshold
-          }
+            [Op.lt]: threshold,
+          },
         },
-        order: [['Stock', 'ASC'], ['Name', 'ASC']]
+        order: [
+          ["Stock", "ASC"],
+          ["Name", "ASC"],
+        ],
       });
-      
-      return { 
-        success: true, 
+
+      return {
+        success: true,
         data: products,
         count: products.length,
-        threshold
+        threshold,
       };
     } catch (error) {
       return { success: false, error: error.message, status: 500 };
@@ -129,28 +149,32 @@ class ProductService {
         include: [
           {
             model: SupplierProductPrice,
-            as: 'supplierPrices',
+            as: "supplierPrices",
             where: {
               UnitPrice: {
                 [Sequelize.Op.eq]: Sequelize.literal(`(
                   SELECT MIN("UnitPrice")
                   FROM "SupplierProductPrice" spp
                   WHERE spp."ProductId" = "Product"."Id"
-                )`)
-              }
+                )`),
+              },
             },
-            required: false
-          }
-        ]
+            required: false,
+          },
+        ],
       });
 
-      products.forEach(product => {
-        product.update({
-          AmountSupplier: Number(product.supplierPrices[0].UnitPrice).toFixed(0)
-        });
+      products.forEach((product) => {
+        if (product.supplierPrices.length > 0) {
+          product.update({
+            AmountSupplier: Number(product.supplierPrices[0].UnitPrice).toFixed(
+              0
+            ),
+          });
+        }
       });
 
-      return { success: true, message: 'Precios actualizados exitosamente' };
+      return { success: true, message: "Precios actualizados exitosamente" };
     } catch (error) {
       return { success: false, error: error.message };
     }
