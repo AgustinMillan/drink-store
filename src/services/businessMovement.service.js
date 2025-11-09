@@ -1,4 +1,5 @@
 import { BusinessMovement, Product, Supplier } from '../models/index.js';
+import businessStateService from './businessState.service.js';
 
 class BusinessMovementService {
   // Obtener todos los movimientos
@@ -51,6 +52,13 @@ class BusinessMovementService {
   async create(movementData) {
     try {
       const movement = await BusinessMovement.create(movementData);
+
+      if (movementData.Reason === 'SALE') {
+        await businessStateService.addBalance(movementData.TotalAmount);
+      } else if (movementData.Reason === 'PURCHASE') {
+        await businessStateService.subtractBalance(movementData.TotalAmount);
+      }
+
       return { success: true, data: movement, status: 201 };
     } catch (error) {
       return { success: false, error: error.message, status: 500 };

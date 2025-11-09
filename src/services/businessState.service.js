@@ -1,5 +1,6 @@
 import { BusinessState, sequelize } from '../models/index.js';
 import { getArgentinaNowSQL } from '../utils/dateHelper.js';
+import productService from './product.service.js';
 
 class BusinessStateService {
   // Obtener todos los estados
@@ -21,7 +22,10 @@ class BusinessStateService {
       if (!state) {
         return { success: false, error: 'Estado no encontrado', status: 404 };
       }
-      return { success: true, data: state };
+
+      const totalStockValue = await productService.getProductStockValue();
+
+      return { success: true, data: { ...state.dataValues, TotalStockValue: totalStockValue.data } };
     } catch (error) {
       return { success: false, error: error.message, status: 500 };
     }
@@ -78,6 +82,38 @@ class BusinessStateService {
         return { success: false, error: 'No hay estados registrados', status: 404 };
       }
       return { success: true, data: state };
+    } catch (error) {
+      return { success: false, error: error.message, status: 500 };
+    }
+  }
+
+  async addBalance(amount) {
+    try {
+      await BusinessState.update({
+        Balance: sequelize.literal(`Balance + ${amount}`)
+      }, {
+        where: {
+          Id: 1
+        }
+      });
+
+      return { success: true, message: 'Balance actualizado exitosamente' };
+    } catch (error) {
+      return { success: false, error: error.message, status: 500 };
+    }
+  }
+
+  async subtractBalance(amount) {
+    try {
+      const state = await BusinessState.findByPk(1);
+
+      await state.update({
+        Balance: state.Balance - amount
+      });
+
+      await state.save();
+
+      return { success: true, message: 'Balance actualizado exitosamente' };
     } catch (error) {
       return { success: false, error: error.message, status: 500 };
     }

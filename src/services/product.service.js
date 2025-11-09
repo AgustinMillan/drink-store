@@ -179,6 +179,19 @@ class ProductService {
       return { success: false, error: error.message };
     }
   }
+
+  async getProductStockValue() {
+    try {
+      const products = await Product.findAll({
+        attributes: ['Stock', 'AmountSupplier'],
+      });
+      const stockValue = products.reduce((acc, product) => acc + product.Stock * product.AmountSupplier, 0);
+      
+      return { success: true, data: Number(stockValue).toFixed(2) };
+    } catch (error) {
+      return { success: false, error: error.message };
+    }
+  }
 }
 
 export default new ProductService();

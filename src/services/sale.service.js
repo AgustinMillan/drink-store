@@ -1,6 +1,7 @@
 import { Sale, ItemTicket, Product, sequelize } from '../models/index.js';
 import { Op } from 'sequelize';
 import { getStartOfDayArgentina, getEndOfDayArgentina, getStartOfMonthArgentina, getEndOfTodayArgentina } from '../utils/dateHelper.js';
+import businessStateService from './businessState.service.js';
 
 // Función helper para calcular reporte financiero (extraída para uso interno)
 function calculateFinancialReport(sales, periodType, startDate) {
@@ -20,11 +21,11 @@ function calculateFinancialReport(sales, periodType, startDate) {
         if (product) {
           const quantity = parseInt(item.Quantity || 0);
           const supplierPrice = parseFloat(product.AmountSupplier || 0);
-          
+
           // Inversión: lo que costó comprar estos productos
           const itemInvestment = supplierPrice * quantity;
           totalInvested += itemInvestment;
-          
+
           // Reinversión: lo que cuesta reponer el stock vendido
           // (usamos el precio de proveedor actual)
           totalReinvestment += itemInvestment;
@@ -37,11 +38,11 @@ function calculateFinancialReport(sales, periodType, startDate) {
   const realProfit = totalRevenue - totalInvested;
 
   // Margen de ganancia en porcentaje
-  const profitMargin = totalRevenue > 0 
+  const profitMargin = totalRevenue > 0
     ? ((realProfit / totalRevenue) * 100).toFixed(2)
     : 0;
 
-  const periodLabel = periodType === 'day' 
+  const periodLabel = periodType === 'day'
     ? 'Día actual'
     : 'Mes actual';
 
@@ -138,7 +139,7 @@ class SaleService {
   // Crear una venta con items y reducir stock
   async createWithItems(saleData) {
     const transaction = await sequelize.transaction();
-    
+
     try {
       const { Amount, PaymentAmount, Items, TicketNumber } = saleData;
 
@@ -155,13 +156,13 @@ class SaleService {
           await transaction.rollback();
           return { success: false, error: `Producto con ID ${item.ProductId} no encontrado`, status: 404 };
         }
-        
+
         if (product.Stock < item.Quantity) {
           await transaction.rollback();
-          return { 
-            success: false, 
-            error: `Stock insuficiente para ${product.Name}. Disponible: ${product.Stock}, Solicitado: ${item.Quantity}`, 
-            status: 400 
+          return {
+            success: false,
+            error: `Stock insuficiente para ${product.Name}. Disponible: ${product.Stock}, Solicitado: ${item.Quantity}`,
+            status: 400
           };
         }
       }
@@ -204,11 +205,13 @@ class SaleService {
         }]
       });
 
-      return { 
-        success: true, 
+      await businessStateService.addBalance(Amount);
+
+      return {
+        success: true,
         data: saleWithItems,
         message: 'Venta creada exitosamente',
-        status: 201 
+        status: 201
       };
     } catch (error) {
       // Rollback en caso de error
@@ -246,8 +249,8 @@ class SaleService {
       const totalSales = sales.length;
       const totalItems = sales.reduce((sum, sale) => sum + (sale.itemTickets?.length || 0), 0);
 
-      return { 
-        success: true, 
+      return {
+        success: true,
         data: {
           sales,
           summary: {
@@ -307,8 +310,8 @@ class SaleService {
         salesByDay[dateKey].amount += parseFloat(sale.Amount || 0);
       });
 
-      return { 
-        success: true, 
+      return {
+        success: true,
         data: {
           sales,
           summary: {

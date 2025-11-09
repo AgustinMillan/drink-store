@@ -1,6 +1,6 @@
 import express from 'express';
 import businessStateService from '../services/businessState.service.js';
-import { createBusinessStateSchema, updateBusinessStateSchema } from '../dto/businessState.dto.js';
+import { createBusinessStateSchema } from '../dto/businessState.dto.js';
 import { validateId } from '../dto/common.dto.js';
 import { validate } from '../middlewares/validation.middleware.js';
 
@@ -35,7 +35,7 @@ router.post('/', validate(createBusinessStateSchema), async (req, res) => {
 });
 
 // PUT /api/business-states/:id - Actualizar un estado
-router.put('/:id', validateId, validate(updateBusinessStateSchema), async (req, res) => {
+router.put('/:id', validateId, validate(createBusinessStateSchema), async (req, res) => {
   const result = await businessStateService.update(req.params.id, req.validatedData);
   const status = result.status || (result.success ? 200 : 500);
   res.status(status).json(result);
