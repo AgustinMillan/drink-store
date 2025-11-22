@@ -1,0 +1,28 @@
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: dirnkstore-postgres
+    environment:
+      # Variables de entorno de PostgreSQL
+      # Puedes sobrescribir estos valores desde un archivo .env
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_NAME}
+      PGDATA: /var/lib/postgresql/data/pgdata
+      TZ: America/Argentina/Buenos_Aires
+    ports:
+      - "${DB_PORT}:5432"
+    volumes:
+      # Volumen persistente para los datos de PostgreSQL
+      - postgres-data:/var/lib/postgresql/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  postgres-data:
+    name: dirnkstore-postgres-data
+

@@ -205,8 +205,6 @@ class SaleService {
         }]
       });
 
-      await businessStateService.addBalance(Amount);
-
       return {
         success: true,
         data: saleWithItems,

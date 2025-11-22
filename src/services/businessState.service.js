@@ -89,13 +89,14 @@ class BusinessStateService {
 
   async addBalance(amount) {
     try {
-      await BusinessState.update({
-        Balance: sequelize.literal(`Balance + ${amount}`)
-      }, {
-        where: {
-          Id: 1
-        }
+      const state = await BusinessState.findByPk(1);
+      if (!state) {
+        return { success: false, error: 'Estado no encontrado', status: 404 };
+      }
+      await state.update({
+        Balance: Number(state.Balance) + Number(amount)
       });
+      await state.save();
 
       return { success: true, message: 'Balance actualizado exitosamente' };
     } catch (error) {
