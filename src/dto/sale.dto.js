@@ -26,3 +26,10 @@ export const updateSaleSchema = z.object({
   Amount: z.number().positive().optional(),
   TicketNumber: z.string().optional().nullable()
 });
+
+// DTO para crear una venta con promoción
+export const createSaleWithPromotionSchema = z.object({
+  PromotionId: z.number().int().positive('PromotionId es requerido'),
+  PaymentAmount: z.number().positive('El monto de pago debe ser positivo'),
+  TicketNumber: z.string().optional().nullable()
+});

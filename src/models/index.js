@@ -8,6 +8,8 @@ import Supplier from './Supplier.js';
 import BusinessMovement from './BusinessMovement.js';
 import SupplierProductPrice from './SupplierProductPrice.js';
 import BusinessState from './BusinessState.js';
+import Promotion from './Promotion.js';
+import PromotionItem from './PromotionItem.js';
 
 // Definir relaciones
 
@@ -77,6 +79,28 @@ SupplierProductPrice.belongsTo(Product, {
   as: 'product'
 });
 
+// Relación Promotion <-> PromotionItem (uno a muchos)
+Promotion.hasMany(PromotionItem, {
+  foreignKey: 'PromotionId',
+  as: 'promotionItems'
+});
+
+PromotionItem.belongsTo(Promotion, {
+  foreignKey: 'PromotionId',
+  as: 'promotion'
+});
+
+// Relación Product <-> PromotionItem (uno a muchos)
+Product.hasMany(PromotionItem, {
+  foreignKey: 'ProductId',
+  as: 'promotionItems'
+});
+
+PromotionItem.belongsTo(Product, {
+  foreignKey: 'ProductId',
+  as: 'product'
+});
+
 // Sincronizar modelos con la base de datos
 export const syncModels = async (force = false) => {
   try {
@@ -97,6 +121,8 @@ export {
   BusinessMovement,
   SupplierProductPrice,
   BusinessState,
+  Promotion,
+  PromotionItem,
   sequelize
 };
 

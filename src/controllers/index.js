@@ -6,3 +6,4 @@ export { default as supplierController } from './supplier.controller.js';
 export { default as businessMovementController } from './businessMovement.controller.js';
 export { default as supplierProductPriceController } from './supplierProductPrice.controller.js';
 export { default as businessStateController } from './businessState.controller.js';
+export { default as promotionController } from './promotion.controller.js';

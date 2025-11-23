@@ -53,7 +53,7 @@ class BusinessMovementService {
     try {
       const movement = await BusinessMovement.create(movementData);
 
-      if (movementData.Reason === 'SALE') {
+      if (movementData.Reason === 'SALE' || movementData.Reason === 'PROMOTION_SALE') {
         await businessStateService.addBalance(movementData.TotalAmount);
       } else if (movementData.Reason === 'PURCHASE') {
         await businessStateService.subtractBalance(movementData.TotalAmount);

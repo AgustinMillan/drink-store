@@ -1,6 +1,6 @@
 import express from 'express';
 import saleService from '../services/sale.service.js';
-import { createSaleSchema, updateSaleSchema, createSaleWithItemsSchema } from '../dto/sale.dto.js';
+import { createSaleSchema, updateSaleSchema, createSaleWithItemsSchema, createSaleWithPromotionSchema } from '../dto/sale.dto.js';
 import { validateId } from '../dto/common.dto.js';
 import { validate } from '../middlewares/validation.middleware.js';
 
@@ -58,6 +58,13 @@ router.post('/', validate(createSaleSchema), async (req, res) => {
 // POST /api/sales/with-items - Crear una venta con items y reducir stock
 router.post('/with-items', validate(createSaleWithItemsSchema), async (req, res) => {
   const result = await saleService.createWithItems(req.validatedData);
+  const status = result.status || (result.success ? 200 : 500);
+  res.status(status).json(result);
+});
+
+// POST /api/sales/with-promotion - Crear una venta con promoción
+router.post('/with-promotion', validate(createSaleWithPromotionSchema), async (req, res) => {
+  const result = await saleService.createWithPromotion(req.validatedData);
   const status = result.status || (result.success ? 200 : 500);
   res.status(status).json(result);
 });

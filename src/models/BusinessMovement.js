@@ -40,7 +40,7 @@ const BusinessMovement = sequelize.define('BusinessMovement', {
     allowNull: false,
     field: 'Reason',
     validate: {
-      isIn: [['SALE', 'PURCHASE', 'ADJUSTMENT', 'LOSS']]
+      isIn: [['SALE', 'PURCHASE', 'ADJUSTMENT', 'LOSS', 'PROMOTION_SALE']]
     }
   },
   Quantity: {

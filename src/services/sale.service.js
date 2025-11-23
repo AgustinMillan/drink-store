@@ -1,7 +1,8 @@
-import { Sale, ItemTicket, Product, sequelize } from '../models/index.js';
+import { Sale, ItemTicket, Product, Promotion, PromotionItem, sequelize } from '../models/index.js';
 import { Op } from 'sequelize';
 import { getStartOfDayArgentina, getEndOfDayArgentina, getStartOfMonthArgentina, getEndOfTodayArgentina } from '../utils/dateHelper.js';
 import businessStateService from './businessState.service.js';
+import promotionService from './promotion.service.js';
 
 // Función helper para calcular reporte financiero (extraída para uso interno)
 function calculateFinancialReport(sales, periodType, startDate) {
@@ -209,6 +210,94 @@ class SaleService {
         success: true,
         data: saleWithItems,
         message: 'Venta creada exitosamente',
+        status: 201
+      };
+    } catch (error) {
+      // Rollback en caso de error
+      await transaction.rollback();
+      return { success: false, error: error.message, status: 500 };
+    }
+  }
+
+  // Crear una venta con promoción
+  async createWithPromotion(saleData) {
+    const transaction = await sequelize.transaction();
+
+    try {
+      const { PromotionId, PaymentAmount, TicketNumber } = saleData;
+
+      // Validar que la promoción existe y está disponible
+      const promotionValidation = await promotionService.validatePromotionAvailability(PromotionId);
+      if (!promotionValidation.success) {
+        await transaction.rollback();
+        return { success: false, error: promotionValidation.error, status: 400 };
+      }
+
+      const promotion = promotionValidation.data;
+
+      // Validar que el pago sea suficiente
+      if (PaymentAmount < promotion.Price) {
+        await transaction.rollback();
+        return { success: false, error: 'El monto de pago es insuficiente', status: 400 };
+      }
+
+      // Crear la venta con el precio de la promoción
+      const sale = await Sale.create({
+        Amount: promotion.Price,
+        TicketNumber: TicketNumber || null
+      }, { transaction });
+
+      // Crear los items de la promoción y reducir stock
+      const createdItems = [];
+      for (const promotionItem of promotion.promotionItems) {
+        const product = promotionItem.product;
+        
+        // Crear el ItemTicket
+        // El Amount se calcula proporcionalmente al precio de la promoción
+        // Por ejemplo, si la promoción cuesta $100 y tiene 3 productos, cada uno sería $33.33
+        const itemAmount = promotion.Price / promotion.promotionItems.length;
+
+        const itemTicket = await ItemTicket.create({
+          SaleId: sale.Id,
+          ProductId: product.Id,
+          Quantity: promotionItem.Quantity,
+          Amount: itemAmount,
+          Print: {
+            isPromotion: true,
+            promotionId: promotion.Id,
+            promotionName: promotion.Name,
+            originalPrice: product.AmountToSale * promotionItem.Quantity
+          }
+        }, { transaction });
+
+        // Reducir el stock del producto
+        await product.update(
+          { Stock: product.Stock - promotionItem.Quantity },
+          { transaction }
+        );
+
+        createdItems.push(itemTicket);
+      }
+
+      // Commit de la transacción
+      await transaction.commit();
+
+      // Obtener la venta completa con items
+      const saleWithItems = await Sale.findByPk(sale.Id, {
+        include: [{
+          model: ItemTicket,
+          as: 'itemTickets',
+          include: [{
+            model: Product,
+            as: 'product'
+          }]
+        }]
+      });
+
+      return {
+        success: true,
+        data: saleWithItems,
+        message: `Venta con promoción "${promotion.Name}" creada exitosamente`,
         status: 201
       };
     } catch (error) {

@@ -12,6 +12,7 @@ import supplierController from "./controllers/supplier.controller.js";
 import businessMovementController from "./controllers/businessMovement.controller.js";
 import supplierProductPriceController from "./controllers/supplierProductPrice.controller.js";
 import businessStateController from "./controllers/businessState.controller.js";
+import promotionController from "./controllers/promotion.controller.js";
 
 dotenv.config();
 
@@ -42,6 +43,7 @@ app.get("/", (req, res) => {
       businessMovements: "/api/business-movements",
       supplierProductPrices: "/api/supplier-product-prices",
       businessStates: "/api/business-states",
+      promotions: "/api/promotions",
     },
   });
 });
@@ -55,6 +57,7 @@ app.use(`${prefix}/suppliers`, supplierController);
 app.use(`${prefix}/business-movements`, businessMovementController);
 app.use(`${prefix}/supplier-product-prices`, supplierProductPriceController);
 app.use(`${prefix}/business-states`, businessStateController);
+app.use(`${prefix}/promotions`, promotionController);
 
 // Inicializar servidor
 const startServer = async () => {
